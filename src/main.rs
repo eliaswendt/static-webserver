@@ -1,11 +1,16 @@
 mod file_cache;
 mod connections;
+mod mime_types;
 use crossbeam_channel::{bounded};
 use crossbeam_utils::thread as scoped_thread;
 use std::net::TcpStream;
+use std::collections::HashMap;
+
 
 fn main() {
-    
+
+    // ].iter());
+
     // read all files into memory
     let file_cache = file_cache::FileCache::from_root_dir("/home/me/git/website");
     println!("done reading {} files to memory", file_cache.files.len());
