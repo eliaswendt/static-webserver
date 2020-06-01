@@ -18,8 +18,8 @@ pub fn accept_to_channel(channel_out: Sender<TcpStream>) {
     }
 }
 
-pub fn write_response(stream: &mut TcpStream, payload: &[u8])  {
-    let header = format!("HTTP/1.1 200 OK\nContent-Length: {}\nContent-Type: text/html\n\n", payload.len());
+pub fn write_response(stream: &mut TcpStream, status_code: &str, mime_type: &str, payload: &[u8])  {
+    let header = format!("HTTP/1.1 {}\nContent-Length: {}\nContent-Type: {}\n\n", status_code, mime_type, payload.len());
     stream.write(header.as_bytes()).unwrap();
     stream.write(payload).unwrap();
 }
@@ -58,7 +58,12 @@ pub fn process_from_channel(channel_in: Receiver<TcpStream>, file_cache: &FileCa
             if line.is_empty() {
                 println!("requested file: {}", get_param);
 
-                write_response(buf_reader.get_mut(), file_cache.get_file(&get_param));
+                // try to find file
+                match file_cache.get_file(&get_param) {
+                    Some(file) =>   write_response(buf_reader.get_mut(), "200 OK", &file.mime_type, &file.payload),
+                    None =>         write_response(buf_reader.get_mut(), "404 Not Found", "text/html", "Not Found".as_bytes())
+                };
+
                 break;
             }
         }
