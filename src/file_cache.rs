@@ -2,23 +2,29 @@ use std::fs;
 use std::path;
 use std::io::{Read, BufReader};
 use std::collections::{LinkedList, HashMap};
+use crate::mime_types;
+
 
 pub struct File {
-    content_type: String,
-    
+    relative_path: String,
+    pub mime_type: String,
+    pub payload: Vec<u8>
 }
 
 pub struct FileCache {
-    pub files: HashMap<String,Vec<u8>>
+    pub files: HashMap<String, File>
 }
 
 impl FileCache {
     pub fn from_root_dir(root_dir: &str) -> FileCache {
 
+        let extension_to_mime_type_map = mime_types::mime_types::get_extension_to_mime_type_map();
+
         let len_root_dir = root_dir.len();
         let file_path_list = get_file_path_list(root_dir);
 
-        let mut files: HashMap<String, Vec<u8>> = HashMap::new();
+        let mut files: HashMap<String, File> = HashMap::new();
+
         let mut buf = Vec::new();
 
         for file_path in file_path_list {
@@ -27,8 +33,39 @@ impl FileCache {
                     
                     buf.clear();
                     match BufReader::new(file).read_to_end(&mut buf) {
-                        Ok(_) => { // all fine, continue with next file
-                            files.insert(String::from(&file_path.to_str().unwrap()[len_root_dir..]), buf.to_vec());
+                        Ok(_) => { // all fine, read file, insert file into cache
+
+                            let relative_path = &file_path.to_str().unwrap()[len_root_dir..];
+
+                            // very messy code to get file extension of current file 
+                            // we first need to get the file_name by splitting away paths
+                            // then we need to split the file_name by the dot char and take the last result as extension
+                            let mut file_extension = ""; // default file extension
+                            let path_splits: Vec<&str> = relative_path.split("/").collect();
+                            if path_splits.len() > 0 {
+                                let file_name = path_splits[path_splits.len()-1];
+                                let dot_splits: Vec<&str> = file_name.split(".").collect();
+                                if dot_splits.len() > 0 {
+                                    file_extension = dot_splits[dot_splits.len()-1]
+                                }
+                            }
+
+                            // last step is to lookup if we can translate this extension to mime_type
+                            let mime_type = match extension_to_mime_type_map.get(file_extension) {
+                                Some(mime_type) => mime_type, // found mime_type
+                                None => {
+                                    "application/octet-stream"
+                                }
+                            };
+
+                            files.insert(
+                                String::from(&file_path.to_str().unwrap()[len_root_dir..]), 
+                                File {
+                                    relative_path: String::from(relative_path),
+                                    mime_type: String::from(mime_type),
+                                    payload: buf.to_vec()
+                                }
+                            );
                         },
                         Err(e) => println!("Could not read file \"{}\": {}", file_path.to_str().unwrap(), e)
                     }
@@ -42,7 +79,7 @@ impl FileCache {
         }
     }
 
-    pub fn get_file(&self, filepath: &str) -> &[u8] {
+    pub fn get_file(&self, filepath: &str) -> Option<&File> {
 
         let filepath = if filepath.ends_with("/") {
             format!("{}index.html", filepath)
@@ -50,10 +87,7 @@ impl FileCache {
             String::from(filepath)
         };
 
-        match self.files.get(&filepath) {
-            Some(file) => file,
-            None => "Not Found".as_bytes()
-        }
+        self.files.get(&filepath)
     }
 }
 
