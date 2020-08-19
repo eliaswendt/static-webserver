@@ -68,5 +68,7 @@ pub fn process_from_channel(channel_in: Receiver<TcpStream>, file_cache: &FileCa
                 break;
             }
         }
+
+        // now just drop connection
     }
 }
