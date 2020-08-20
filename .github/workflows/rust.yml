@@ -21,7 +21,7 @@ jobs:
     - name: Store build artifact
       uses: actions/upload-artifact@v2
       with:
-        name: release
-        path: /home/runner/work/static-webserver/static-webserver
+        name: static-webserver
+        path: /home/runner/work/static-webserver/static-webserver/target/release/static_webserver
     - name: Run tests
       run: cargo test --verbose
