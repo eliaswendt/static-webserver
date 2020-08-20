@@ -22,6 +22,6 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: release
-        path: static-webserver
+        path: /home/runner/work/static-webserver/static-webserver
     - name: Run tests
       run: cargo test --verbose
