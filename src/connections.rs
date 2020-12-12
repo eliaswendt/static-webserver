@@ -19,7 +19,7 @@ pub fn accept_to_channel(channel_out: Sender<TcpStream>) {
 }
 
 pub fn write_response(stream: &mut TcpStream, status_code: &str, mime_type: &str, payload: &[u8])  {
-    let header = format!("HTTP/1.1 {}\nContent-Length: {}\nContent-Type: {}\n\n", status_code, mime_type, payload.len());
+    let header = format!("HTTP/1.1 {}\nContent-Type: {}\nContent-Length: {}\n\n", status_code, mime_type, payload.len());
     stream.write(header.as_bytes()).unwrap();
     stream.write(payload).unwrap();
 }
