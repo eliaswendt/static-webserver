@@ -30,7 +30,8 @@ pub fn process_from_channel(channel_in: Receiver<TcpStream>, file_cache: &FileCa
     
     for stream in channel_in {
 
-        let mut buf_reader = BufReader::new(stream);
+        // cap buffer capacity to mitigate large requests
+        let mut buf_reader = BufReader::with_capacity(4096, stream);
         let mut buf = String::new();
 
         let mut get_param = String::from("/index.html");
@@ -60,12 +61,14 @@ pub fn process_from_channel(channel_in: Receiver<TcpStream>, file_cache: &FileCa
 
                 // try to find file
                 match file_cache.get_file(&get_param) {
-                    Some(file) =>   write_response(buf_reader.get_mut(), "200 OK", &file.mime_type, &file.payload),
-                    None =>         write_response(buf_reader.get_mut(), "404 Not Found", "text/html", "Not Found".as_bytes())
+                    Some(file) => write_response(buf_reader.get_mut(), "200 OK", &file.mime_type, &file.payload),
+                    None =>       write_response(buf_reader.get_mut(), "404 Not Found", "text/html", "Not Found".as_bytes())
                 };
 
                 break;
             }
         }
+
+        // now just drop connection
     }
 }

@@ -6,7 +6,6 @@ use crate::mime_types;
 
 
 pub struct File {
-    relative_path: String,
     pub mime_type: String,
     pub payload: Vec<u8>
 }
@@ -61,7 +60,6 @@ impl FileCache {
                             files.insert(
                                 String::from(&file_path.to_str().unwrap()[len_root_dir..]), 
                                 File {
-                                    relative_path: String::from(relative_path),
                                     mime_type: String::from(mime_type),
                                     payload: buf.to_vec()
                                 }
@@ -127,7 +125,7 @@ fn get_file_path_list(root_dir: &str) -> LinkedList<path::PathBuf> {
             let metadata = match fs::metadata(&path) {
                 Ok(metadata) => metadata,
                 Err(e) => {
-                    println!("Could not read entrie's metadata: {} -> continue with next entry", e);
+                    println!("Could not read entry's metadata: {} -> continue with next entry", e);
                     continue;
                 }
             };

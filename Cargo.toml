@@ -1,5 +1,5 @@
 [package]
-name = "static_webserver"
+name = "static-webserver"
 version = "0.1.0"
 authors = ["Elias Wendt"]
 edition = "2018"
@@ -9,4 +9,5 @@ edition = "2018"
 [dependencies]
 crossbeam-channel = "0.4.2"
 crossbeam-utils = "0.7"
-
+hyper = "0.13"
+tokio = { version = "0.2", features = ["full"] }
